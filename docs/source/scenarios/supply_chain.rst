@@ -1,11 +1,14 @@
-
 Supply Chain Management
 =======================
 
-The Supply Chain scenario simulates a common problem of products' manufacture, storage, and transportation. In this simulated system, products are produced by suppliers, stored in warehouses, and then sold by retailers. Multiple vehicles are running around the "world" to deliver products and materials. We need to design a strategy to control the production and transportation according to the dynamic market demand so that the entire system can operate efficiently and benignly.
+The Supply Chain scenario simulates a common problem of products' manufacture, storage, and transportation. In this simulated system, products are produced by suppliers, transferred between and stored in warehouses/suppliers/retailers, and then sold by retailers. Multiple vehicles are running around the "world" to deliver products and materials. We need to design a strategy to control the production and transportation according to the dynamic market demand so that the entire system can operate efficiently and benignly.
 
 Resource Flow
 -------------
+
+Let's first imagine a simple product production and sales scenario. Suppose there is a factory that can produce a type of product. After the production is done, the products will be temporarily stored in the factory's storage, and then being transported to other downstream. There are three types of potential downstream. First, the downstream could be a warehouse with larger storage, where the products will be stored for a longer time. Second, the downstream could be another factory, which takes these products as material to make the downstream factory's own production. Finally, the downstream might be a retailer, from which the customers could purchase these products. Transportation certainly cannot be completed in an instant. Instead, it is affected by many factors such as factory location, vehicle speed, and road conditions. 
+
+The above example is an extremely simple abstraction of the world's supply chain system, and that's what we want to formulate in MARO. To achieve this, we will first introduce several important concepts, and then illustrate what a Supply Chain world in MARO looks like.
 
 Stock Keeping Unit (SKU)
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,7 +33,7 @@ As mentioned above, a facility is a place provided for a particular purpose. In 
 * **Warehouse**: temporarily store products.
 * **Retailer**: sell products.
 
-The function of a facility is defined by a set of **units** it contains. In this scenario, a unit can be considered as an indivisible object that describes an atomic functionality of facilities. For example, a ``StorageUnit`` describes the storage ability of the facility. The reason why suppliers, warehouses, and retailers all have storage capabilities is they all contain a ``StorageUnit``. The detailed storage capability (e.g., storage size) is defined by the ``StorageUnit``.
+The function of a facility is defined by a set of **units** it contains. In this scenario, a unit can be considered as an indivisible object that describes an atomic functionality of facilities. For example, a ``StorageUnit`` describes the storage ability of the facility. Any facility that requires storage ability should have a ``StorageUnit`` in its corresponding configuration, and the details of the storage capability (e.g., storage size) should be specified by this ``StorageUnit``.
 
 There are two types of units: **SKU-dependent units** and **SKU-independent units**. A unit is SKU-dependent means it correlates to a specific type of SKU. For example, a ``ManufactureUnit`` is SKU-dependent since it only describes the ability to produce one specific kind of SKU. On the other hand, a unit is SKU-independent means it does not correlate to any specific SKU. For example, a ``StorageUnit`` is SKU-independent because storage can be used to store any kind of product. 
 
@@ -42,7 +45,7 @@ Here are the units that supported by MARO for now:
   
   * ``ConsumerUnit``: for generating orders to purchase from upstream by action. 
   
-  * ``SellerUnit``: for generating product consume demand, and moving demand products from current storage (product leaves the system). 
+  * ``SellerUnit``: for generating product consumption demand, and moving demand products from current storage (product leaves the system). 
   
   * ``ProductUnit``: for grouping units of one specific SKU, usually contains a ``ConsumerUnit``, a ``SellerUnit``, and a ``ManufactureUnit``.
 
@@ -197,12 +200,12 @@ In order to get known of the system status, we could find the information we nee
 
 Actions in the Supply Chain scenario are simple. There are only two types of actions: ``ConsumerAction`` and ``ManufactureAction``.
 
-``ConsumerAction`` refers to the action that one facility purchases some SKUs from another facility. The information of each ``ConsumerAction`` is listed as below:
+``ConsumerAction`` refers to the action that one facility purchases some SKUs from its upstream facility. The information of each ``ConsumerAction`` is listed as below:
 
 * **id** (int): The corresponding ID of the consumer. Because one facility may have multiple consumer units, **this ID is a unit ID** for unambiguity.
 * **product_id** (int): The SKU id of the product.
 * **source_id** (int): The corresponding ID of the product provider. **This ID is a facility ID rather than a unit ID**, because the consumer only cares about which facility the product is purchased from, and does not care which unit produces the product.
-* **vlt** (int): The expecting velocity of the transportation.
+* **vlt** (int): The expected velocity of the transportation.
 * **reward_discount** (int): Literal meaning.
 
 ``ManufactureAction`` refers to the instruction for the facility to start production. Its information is listed as below:
